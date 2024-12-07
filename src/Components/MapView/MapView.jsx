@@ -43,7 +43,7 @@
 // // // //       setLoading(true); // Indicate loading state
 // // // //       try {
 // // // //         // Send GET request to fetch the driver list
-// // // //         const response = await fetch("http://localhost:8000/api/all/driver", {
+// // // //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 // // // //           method: "GET",
 // // // //           headers: {
 // // // //             "Content-Type": "application/json",
@@ -127,7 +127,7 @@
 // // //       setLoading(true); // Indicate loading state
 // // //       try {
 // // //         // Send GET request to fetch the driver list
-// // //         const response = await fetch("http://localhost:8000/api/all/driver", {
+// // //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 // // //           method: "GET",
 // // //           headers: {
 // // //             "Content-Type": "application/json",
@@ -219,7 +219,7 @@
 // //       setLoading(true); // Indicate loading state
 // //       try {
 // //         // Send GET request to fetch the driver list
-// //         const response = await fetch("http://localhost:8000/api/all/driver", {
+// //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 // //           method: "GET",
 // //           headers: {
 // //             "Content-Type": "application/json",
@@ -333,7 +333,7 @@
 //       setLoading(true); // Indicate loading state
 //       try {
 //         // Send GET request to fetch the driver list
-//         const response = await fetch("http://localhost:8000/api/all/driver", {
+//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -452,7 +452,7 @@
 //     const fetchDriverList = async () => {
 //       setLoading(true); // Indicate loading state
 //       try {
-//         const response = await fetch("http://localhost:8000/api/all/driver", {
+//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -587,7 +587,7 @@
 //     const fetchDriverList = async () => {
 //       setLoading(true); // Indicate loading state
 //       try {
-//         const response = await fetch("http://localhost:8000/api/all/driver", {
+//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -710,6 +710,8 @@ const FlyToLocation = ({ location }) => {
   
   const map = useMap();
   useEffect(() => {
+    console.log(location);
+    
     if (location) {
       map.flyTo([location.lat, location.lon], map.getZoom());
     }
@@ -737,7 +739,7 @@ const MapView = () => {
   // Function to update the user location in the backend API
   const updateUserLocation = async (lat, lon) => {
     // try {
-    //   const response = await fetch("http://localhost:8000/api/notify-location", {
+    //   const response = await fetch("https://gps-app-omega.vercel.app/api/notify-location", {
     //     method: "POST",
     //     headers: {
     //       "Content-Type": "application/json",
@@ -782,7 +784,7 @@ const MapView = () => {
   //   const fetchDriverList = async () => {
   //     setLoading(true); // Indicate loading state
   //     try {
-  //       const response = await fetch("http://localhost:8000/api/all/driver", {
+  //       const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
   //         method: "GET",
   //         headers: {
   //           "Content-Type": "application/json",
@@ -875,7 +877,6 @@ const MapView = () => {
     };
   }, []);
 
-  // Use the geolocation watch to continuously track location
   useEffect(() => {
     const intervalId = setInterval(() => {
       navigator.geolocation.getCurrentPosition(
@@ -884,7 +885,6 @@ const MapView = () => {
           const lon = position.coords.longitude;
           setUserLocation({ lat, lon });
   
-          // Update the user's location in the backend
           updateUserLocation(lat, lon);
         },
         (error) => {
@@ -893,13 +893,12 @@ const MapView = () => {
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, // Allow up to 10 seconds
+          timeout: 10000, 
           maximumAge: 10000,
         }
       );
-    }, 2000); // Update every 2 seconds
+    }, 2000); 
   
-    // Cleanup the interval on component unmount
     return () => {
       clearInterval(intervalId);
     };
