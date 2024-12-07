@@ -61,7 +61,7 @@ const AddDriver = ({ setDrivers }) => {
 
         try {
           // Send POST request to backend using fetch
-          const response = await fetch("https://gps-app-omega.vercel.app/api/register/driver", {
+          const response = await fetch("https://gps-app-delta.vercel.app/api/register/driver", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

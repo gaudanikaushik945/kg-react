@@ -43,7 +43,7 @@
 // // // //       setLoading(true); // Indicate loading state
 // // // //       try {
 // // // //         // Send GET request to fetch the driver list
-// // // //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+// // // //         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 // // // //           method: "GET",
 // // // //           headers: {
 // // // //             "Content-Type": "application/json",
@@ -127,7 +127,7 @@
 // // //       setLoading(true); // Indicate loading state
 // // //       try {
 // // //         // Send GET request to fetch the driver list
-// // //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+// // //         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 // // //           method: "GET",
 // // //           headers: {
 // // //             "Content-Type": "application/json",
@@ -219,7 +219,7 @@
 // //       setLoading(true); // Indicate loading state
 // //       try {
 // //         // Send GET request to fetch the driver list
-// //         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+// //         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 // //           method: "GET",
 // //           headers: {
 // //             "Content-Type": "application/json",
@@ -333,7 +333,7 @@
 //       setLoading(true); // Indicate loading state
 //       try {
 //         // Send GET request to fetch the driver list
-//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+//         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -452,7 +452,7 @@
 //     const fetchDriverList = async () => {
 //       setLoading(true); // Indicate loading state
 //       try {
-//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+//         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -587,7 +587,7 @@
 //     const fetchDriverList = async () => {
 //       setLoading(true); // Indicate loading state
 //       try {
-//         const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+//         const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
 //           method: "GET",
 //           headers: {
 //             "Content-Type": "application/json",
@@ -739,7 +739,7 @@ const MapView = () => {
   // Function to update the user location in the backend API
   const updateUserLocation = async (lat, lon) => {
     // try {
-    //   const response = await fetch("https://gps-app-omega.vercel.app/api/notify-location", {
+    //   const response = await fetch("https://gps-app-delta.vercel.app/api/notify-location", {
     //     method: "POST",
     //     headers: {
     //       "Content-Type": "application/json",
@@ -784,7 +784,7 @@ const MapView = () => {
   //   const fetchDriverList = async () => {
   //     setLoading(true); // Indicate loading state
   //     try {
-  //       const response = await fetch("https://gps-app-omega.vercel.app/api/all/driver", {
+  //       const response = await fetch("https://gps-app-delta.vercel.app/api/all/driver", {
   //         method: "GET",
   //         headers: {
   //           "Content-Type": "application/json",
