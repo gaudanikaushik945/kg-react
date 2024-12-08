@@ -854,7 +854,7 @@ const MapView = () => {
       (error) => {
         console.error("Error fetching geolocation:", error);
       },
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 1000 }
     );
   
     return () => {
@@ -897,7 +897,7 @@ const MapView = () => {
           maximumAge: 1000,
         }
       );
-    }, 2000); 
+    }, 1000); 
   
     return () => {
       clearInterval(intervalId);
@@ -908,7 +908,7 @@ const MapView = () => {
   return (
     <div className="p-0" style={{ height: "100vh", width: "100vw" }}>
    <MapContainer
-  center={userLocation ? [userLocation.lat, userLocation.lon] : [21.1702, 72.8311]}
+  center={userLocation ? [userLocation.lat, userLocation.lon]}
   zoom={13}
   style={{ height: "100%", width: "100%" }}
 >
