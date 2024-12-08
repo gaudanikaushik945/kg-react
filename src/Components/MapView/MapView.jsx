@@ -893,8 +893,8 @@ const MapView = () => {
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000, 
-          maximumAge: 10000,
+          timeout: 1000, 
+          maximumAge: 1000,
         }
       );
     }, 2000); 
