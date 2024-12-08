@@ -854,7 +854,7 @@ const MapView = () => {
       (error) => {
         console.error("Error fetching geolocation:", error);
       },
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 1000 }
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000}
     );
   
     return () => {
@@ -893,11 +893,11 @@ const MapView = () => {
         },
         {
           enableHighAccuracy: true,
-          timeout: 1000, 
-          maximumAge: 1000,
+          timeout: 10000, 
+          maximumAge: 10000,
         }
       );
-    }, 1000); 
+    }, 10000); 
   
     return () => {
       clearInterval(intervalId);
