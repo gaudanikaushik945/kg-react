@@ -908,7 +908,7 @@ const MapView = () => {
   return (
     <div className="p-0" style={{ height: "100vh", width: "100vw" }}>
    <MapContainer
-  center={userLocation ? [userLocation.lat, userLocation.lon]}
+  center={userLocation ? [userLocation.lat, userLocation.lon] : [21.1702, 72.8311]}
   zoom={13}
   style={{ height: "100%", width: "100%" }}
 >
