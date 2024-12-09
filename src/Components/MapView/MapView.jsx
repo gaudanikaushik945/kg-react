@@ -1,10 +1,11 @@
+
+
 import React, { useContext, useEffect, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import _ from 'lodash';
+import _ from "lodash";
 import L from "leaflet";
 import { AuthContext } from "../context/contex";
-import { io } from "socket.io-client";
 import { useMap } from "react-leaflet";
 
 // FlyToLocation component to update the map view on location change
@@ -17,7 +18,7 @@ const FlyToLocation = ({ location }) => {
   }, [location, map]);
 
   return null;
-}
+};
 
 // Custom icon for markers
 const customIcon = new L.Icon({
@@ -29,24 +30,39 @@ const customIcon = new L.Icon({
 
 const MapView = () => {
   const { setAddDriver } = useContext(AuthContext);
-  const [driverDetails, setDriverDetails] = useState([]);  // To store driver data
+  const [driverDetails, setDriverDetails] = useState([]); // To store driver data
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [userLocation, setUserLocation] = useState(null);  // Store the user's location
+  const [userLocation, setUserLocation] = useState(null); // Store the user's location
 
-  // Update user location on each change
+  // Fetch driver data from the API
+  const fetchDriverData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/all/driver');
+      if (!response.ok) {
+        throw new Error('Failed to fetch driver data');
+      }
+      const data = await response.json();
+      setDriverDetails(data.data); // Set the fetched driver data
+    } catch (err) {
+      setError('Failed to fetch driver data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Throttle location updates to avoid frequent API calls
   const updateUserLocation = async (lat, lon) => {
     // API request logic for updating user location (e.g., to backend)
   };
 
-  // Throttle location updates to avoid frequent API calls
   const updateUserLocationThrottled = useCallback(
     _.throttle(updateUserLocation, 10000), // Throttle updates to every 10 seconds
     []
   );
 
   const handleGeolocationError = (error) => {
-    // Handle geolocation errors (e.g., permission denied, timeout)
     if (error.code === error.PERMISSION_DENIED) {
       setError("Permission to access location was denied.");
     } else if (error.code === error.POSITION_UNAVAILABLE) {
@@ -63,37 +79,43 @@ const MapView = () => {
       (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-        setUserLocation({ lat, lon });  // Update user location state
-        updateUserLocationThrottled(lat, lon);  // Throttle the updates to backend
+        setUserLocation({ lat, lon }); // Update user location state
+        updateUserLocationThrottled(lat, lon); // Throttle the updates to backend
       },
       handleGeolocationError,
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }  // Increased timeout
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
     );
 
-    // Cleanup geolocation watch on component unmount
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
   }, [updateUserLocationThrottled]);
 
-  // Log every second with user location and timestamp
+  // Log user and driver locations every second
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (userLocation) {
-        const { lat, lon } = userLocation;
-        const timestamp = new Date().toLocaleTimeString();  // Get current time
-        console.log(`Location: [${lat}, ${lon}] at ${timestamp}`);
+        console.log(`User Location: [Lat: ${userLocation.lat.toFixed(4)}, Lon: ${userLocation.lon.toFixed(4)}]`);
       }
-    }, 1000);
 
-    return () => {
-      clearInterval(intervalId);  // Cleanup on unmount
-    };
-  }, [userLocation]);  // This depends on `userLocation` state
+      // Log all driver locations
+      driverDetails.forEach(driver => {
+        if (driver.location?.lat && driver.location?.lon) {
+          console.log(`${driver.driverName}'s Location: [Lat: ${driver.location.lat.toFixed(4)}, Lon: ${driver.location.lon.toFixed(4)}]`);
+        }
+      });
+    }, 1000); // Log every second
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [userLocation, driverDetails]); // Depend on `userLocation` and `driverDetails`
+
+  // Fetch driver data on component mount
+  useEffect(() => {
+    fetchDriverData();
+  }, []);
 
   return (
     <div className="p-0" style={{ height: "100vh", width: "100vw" }}>
-      {/* Show error message if there is a geolocation error */}
       {error && (
         <div style={{ position: "absolute", top: 20, left: 20, backgroundColor: "red", color: "white", padding: "10px" }}>
           {error}
@@ -101,7 +123,7 @@ const MapView = () => {
       )}
 
       <MapContainer
-        center={userLocation ? [userLocation.lat, userLocation.lon] : [21.1702, 72.8311]}  // Center map on user location
+        center={userLocation ? [userLocation.lat, userLocation.lon] : [21.1702, 72.8311]} // Center map on user location
         zoom={13}
         style={{ height: "100%", width: "100%" }}
       >
@@ -133,6 +155,8 @@ const MapView = () => {
               <Marker key={driver._id} position={[driver.location.lat, driver.location.lon]} icon={customIcon}>
                 <Popup>
                   <strong>{driver.driverName}</strong>
+                  <br />
+                  Car: {driver.carModel}
                   <br />
                   Latitude: {driver.location.lat.toFixed(4)}
                   <br />
