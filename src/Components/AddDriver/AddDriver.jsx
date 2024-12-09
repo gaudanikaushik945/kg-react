@@ -1,5 +1,6 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/contex";
+import socket from "../../socket"; 
 
 const AddDriver = ({ setDrivers }) => {
   const [formData, setFormData] = useState({
@@ -11,13 +12,10 @@ const AddDriver = ({ setDrivers }) => {
     isActive: "active",
   });
 
-  const [loading, setLoading] = useState(false); // To handle loading state
-  // const [addDriver, setAddDriver] = useState(false); // To handle loading state
+  const [loading, setLoading] = useState(false); 
   const { setAddDriver } = useContext(AuthContext); 
   const [location, setLocation] = useState({ lat: null, lon: null });
-
-
-  const [error, setError] = useState(null); // To handle errors
+  const [error, setError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,35 +36,23 @@ const AddDriver = ({ setDrivers }) => {
       return;
     }
 
-    // Get the location
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-      const { latitude, longitude } = position.coords;
-
-      console.log("Driver Location:");
-        console.log(`Latitude: ${latitude}`);
-        console.log(`Longitude: ${longitude}`);
-
-        // Update location state
+        const { latitude, longitude } = position.coords;
         setLocation({ lat: latitude, lon: longitude });
-
 
         const driverData = {
           ...formData,
           location: { lat: latitude, lon: longitude },
         };
 
-        console.log("drive Data" , driverData);
-        
-
         try {
-          // Send POST request to backend using fetch
-          const response = await fetch("https://kaushik-backend.vercel.app/api/register/driver", {
+          const response = await fetch("http://localhost:8000/api/register/driver", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(driverData), // Stringify the driver data
+            body: JSON.stringify(driverData),
           });
 
           if (!response.ok) {
@@ -75,11 +61,15 @@ const AddDriver = ({ setDrivers }) => {
           }
 
           const responseData = await response.json();
-          console.log(responseData , "res+++++++++++++++");
           setAddDriver(true);
-          
-          // Update parent state
           setDrivers((prevDrivers) => [...prevDrivers, responseData]);
+
+          // Emit location to the server via WebSocket
+          socket.emit("send-location", {
+            latitude,
+            longitude,
+            driverName: formData.driverName,
+          });
 
           // Reset the form
           setFormData({
@@ -93,19 +83,38 @@ const AddDriver = ({ setDrivers }) => {
 
           alert("Driver added successfully!");
         } catch (err) {
-          console.error("Error:++++++++++++++++++++++++", err);
+          console.error("Error:", err);
           setError(err.message || "Failed to add driver. Please try again.");
         } finally {
           setLoading(false);
         }
       },
-      (error) => {
-        console.error("Geolocation error:", error);
+      (geolocationError) => {
+        console.error("Geolocation error:", geolocationError);
         setError("Failed to fetch location. Please enable location services.");
         setLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0,
       }
     );
   };
+
+  // Setup socket listener and cleanup on component unmount
+  useEffect(() => {
+    const handleLocationUpdate = (data) => {
+      const { id, latitude, longitude } = data;
+      console.log(`Received location update: Driver ID: ${id}, Lat: ${latitude}, Lon: ${longitude}`);
+    };
+
+    socket.on("receive-location", handleLocationUpdate);
+
+    return () => {
+      socket.off("receive-location", handleLocationUpdate);
+    };
+  }, []);
 
   return (
     <div className="mt-20 flex flex-col items-center justify-center">
@@ -116,12 +125,9 @@ const AddDriver = ({ setDrivers }) => {
       <div className="bg-white w-full max-w-lg p-8 rounded-lg shadow-lg">
         {error && <p className="text-red-500 text-center">{error}</p>}
         <form onSubmit={handleAddDriver} className="space-y-6">
-          {/* Name Field */}
+          {/* Driver Name */}
           <div>
-            <label
-              htmlFor="driverName"
-              className="block text-sm font-medium text-gray-600 mb-1"
-            >
+            <label htmlFor="driverName" className="block text-sm font-medium text-gray-600 mb-1">
               Name
             </label>
             <input
@@ -136,12 +142,9 @@ const AddDriver = ({ setDrivers }) => {
             />
           </div>
 
-          {/* Mobile Number Field */}
+          {/* Mobile Number */}
           <div>
-            <label
-              htmlFor="mobileNumber"
-              className="block text-sm font-medium text-gray-600 mb-1"
-            >
+            <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-600 mb-1">
               Mobile Number
             </label>
             <input
@@ -156,31 +159,26 @@ const AddDriver = ({ setDrivers }) => {
             />
           </div>
 
+          {/* Password */}
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-600 mb-1"
-            >
-             password
+            <label htmlFor="password" className="block text-sm font-medium text-gray-600 mb-1">
+              Password
             </label>
             <input
-              type="text"
+              type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleInputChange}
               className="w-full sm:p-3 p-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter mobile number"
+              placeholder="Enter password"
               required
             />
           </div>
 
-          {/* Vehicle Number Field */}
+          {/* Vehicle Number */}
           <div>
-            <label
-              htmlFor="rcBookNumber"
-              className="block text-sm font-medium text-gray-600 mb-1"
-            >
+            <label htmlFor="rcBookNumber" className="block text-sm font-medium text-gray-600 mb-1">
               Vehicle Number
             </label>
             <input
@@ -195,12 +193,9 @@ const AddDriver = ({ setDrivers }) => {
             />
           </div>
 
-          {/* Car Model Field */}
+          {/* Car Model */}
           <div>
-            <label
-              htmlFor="carModel"
-              className="block text-sm font-medium text-gray-600 mb-1"
-            >
+            <label htmlFor="carModel" className="block text-sm font-medium text-gray-600 mb-1">
               Model Name
             </label>
             <input

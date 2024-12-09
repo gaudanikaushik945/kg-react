@@ -19,7 +19,7 @@ const DriverList = ({ drivers, handleRemove }) => {
       setLoading(true); // Indicate loading state
       try {
         // Send GET request to fetch the driver list
-        const response = await fetch("https://kaushik-backend.vercel.app/api/all/driver", {
+        const response = await fetch("http://localhost:8000/api/all/driver", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
