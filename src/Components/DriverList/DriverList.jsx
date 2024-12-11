@@ -12,7 +12,7 @@ const DriverList = () => {
     const fetchDriverList = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://dhavalbhai-backend.vercel.app/api/drivers/all/driver", {
+        const response = await fetch("https://kg-backend-lyart.vercel.app/api/drivers/all/driver", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -39,7 +39,7 @@ const DriverList = () => {
 
   const handleRemove = async (driverId) => {
     try {
-      const response = await fetch(`https://dhavalbhai-backend.vercel.app/api/drivers/remove/${driverId}`, {
+      const response = await fetch(`https://kg-backend-lyart.vercel.app/api/drivers/remove/${driverId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

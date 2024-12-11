@@ -56,7 +56,7 @@ const AddDriver = ({ setDrivers }) => {
         console.log("Driver data being sent to backend: ", driverData); // Log the complete data
   
         try {
-          const response = await fetch("https://dhavalbhai-backend.vercel.app/api/drivers/register/driver", {
+          const response = await fetch("https://kg-backend-lyart.vercel.app/api/drivers/register/driver", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
