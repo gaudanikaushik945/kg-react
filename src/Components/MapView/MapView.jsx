@@ -49,7 +49,7 @@ const MapView = () => {
   const fetchDriverData = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/drivers/all/driver");
+      const response = await fetch("https://dhavalbhai-backend.vercel.app/api/drivers/all/driver");
       if (!response.ok) {
         throw new Error("Failed to fetch driver data");
       }
