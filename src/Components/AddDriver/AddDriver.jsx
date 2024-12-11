@@ -63,6 +63,8 @@ const AddDriver = ({ setDrivers }) => {
             },
             body: JSON.stringify(driverData),  // Make sure location is included in the body
           });
+          console.log("============ responce ===============", response);
+          
   
           if (!response.ok) {
             const errorData = await response.json();
