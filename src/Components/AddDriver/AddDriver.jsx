@@ -41,45 +41,35 @@ const AddDriver = ({ setDrivers }) => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-  
-        // Log location data before setting the state
         console.log("Location fetched: ", { lat: latitude, lon: longitude });
-  
-        // Ensure location is being set correctly before making the API request
         setLocation({ lat: latitude, lon: longitude });
-  
+    
         const driverData = {
           ...formData,
-          location: { lat: latitude, lon: longitude },  // Ensure location is included
+          location: { lat: latitude, lon: longitude },
         };
-  
-        console.log("Driver data being sent to backend: ", driverData); // Log the complete data
-  
+    
         try {
           const response = await fetch("https://kg-backend-lyart.vercel.app/api/drivers/register/driver", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(driverData),  // Make sure location is included in the body
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(driverData),
           });
-          console.log("============ responce ===============", response);
-          
-  
+    
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "Failed to add driver.");
           }
-  
+    
           const responseData = await response.json();
           setAddDriver(true);
           setDrivers((prevDrivers) => [...prevDrivers, responseData]);
-  
+    
           socket.emit("update-location-captain", {
             userId: responseData._id,
             location: { lat: latitude, lon: longitude },
           });
-  
+    
           setFormData({
             driverName: "",
             mobileNumber: "",
@@ -88,9 +78,8 @@ const AddDriver = ({ setDrivers }) => {
             carModel: "",
             isActive: "active",
           });
-  
+    
           alert("Driver added successfully!");
-  
         } catch (err) {
           console.error("Error:", err);
           setError(err.message || "Failed to add driver. Please try again.");
@@ -100,15 +89,16 @@ const AddDriver = ({ setDrivers }) => {
       },
       (geolocationError) => {
         console.error("Geolocation error:", geolocationError);
-        setError("Failed to fetch location. Please enable location services.");
+        setError(`Failed to fetch location: ${geolocationError.message} (code: ${geolocationError.code})`);
         setLoading(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 10000, // Increased timeout
         maximumAge: 0,
       }
-    ); 
+    );
+    
   };
     
 
