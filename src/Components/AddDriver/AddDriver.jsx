@@ -49,43 +49,36 @@ const AddDriver = ({ setDrivers }) => {
           location: { lat: latitude, lon: longitude },
         };
     
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+        
         try {
           const response = await fetch("https://kg-backend-lyart.vercel.app/api/drivers/register/driver", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify(driverData),
+            signal: controller.signal,
           });
-    
+          clearTimeout(timeoutId);
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.message || "Failed to add driver.");
+            throw new Error(errorData.message || `Server responded with ${response.status}`);
           }
-    
           const responseData = await response.json();
-          setAddDriver(true);
-          setDrivers((prevDrivers) => [...prevDrivers, responseData]);
-    
-          socket.emit("update-location-captain", {
-            userId: responseData._id,
-            location: { lat: latitude, lon: longitude },
-          });
-    
-          setFormData({
-            driverName: "",
-            mobileNumber: "",
-            password: "",
-            rcBookNumber: "",
-            carModel: "",
-            isActive: "active",
-          });
-    
-          alert("Driver added successfully!");
-        } catch (err) {
-          console.error("Error:", err);
-          setError(err.message || "Failed to add driver. Please try again.");
-        } finally {
-          setLoading(false);
+          // Handle success
+        } catch (error) {
+          if (error.name === "AbortError") {
+            console.error("Request timeout exceeded");
+            setError("The request took too long to complete. Please try again.");
+          } else {
+            console.error("Error:", error);
+            setError(error.message || "An unexpected error occurred.");
+          }
         }
+        
+        
       },
       (geolocationError) => {
         console.error("Geolocation error:", geolocationError);
