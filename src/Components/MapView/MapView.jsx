@@ -5,14 +5,19 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import _ from "lodash";
 import L from "leaflet";
-import { AuthContext } from "../context/contex";
 import { useMap } from "react-leaflet";
+import { AuthContext } from "../context/UserContext";
+import { io } from "socket.io-client";
+
+// Connect to socket
+const socket = io("http://localhost:8000"); // Replace with your backend URL
 
 // FlyToLocation component to update the map view on location change
 const FlyToLocation = ({ location }) => {
   const map = useMap();
+
   useEffect(() => {
-    if (location) {
+    if (map && location) {
       map.flyTo([location.lat, location.lon], map.getZoom());
     }
   }, [location, map]);
@@ -20,13 +25,17 @@ const FlyToLocation = ({ location }) => {
   return null;
 };
 
-// Custom icon for markers
-const customIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/61/61168.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
+// Function to generate a custom icon with dynamic color
+const getCustomIcon = (isActive) =>
+  new L.Icon({
+    iconUrl: isActive
+      ? "/icones/red-car.png" // Active icon
+      : "/icones/green-car.png", // Inactive icon
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    className: isActive ? "active-icon" : "inactive-icon",
+  });
 
 const MapView = () => {
   const { setAddDriver } = useContext(AuthContext);
@@ -34,19 +43,20 @@ const MapView = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userLocation, setUserLocation] = useState(null); // Store the user's location
+  const [userId, setUserId] = useState("user123"); // Set your userId here, dynamic if necessary
 
   // Fetch driver data from the API
   const fetchDriverData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/all/driver');
+      const response = await fetch("http://localhost:8000/api/drivers/all/driver");
       if (!response.ok) {
-        throw new Error('Failed to fetch driver data');
+        throw new Error("Failed to fetch driver data");
       }
       const data = await response.json();
-      setDriverDetails(data.data); // Set the fetched driver data
+      setDriverDetails(data); // Safely set the driver data
     } catch (err) {
-      setError('Failed to fetch driver data');
+      setError("Failed to fetch driver data");
     } finally {
       setLoading(false);
     }
@@ -54,11 +64,11 @@ const MapView = () => {
 
   // Throttle location updates to avoid frequent API calls
   const updateUserLocation = async (lat, lon) => {
-    // API request logic for updating user location (e.g., to backend)
+    socket.emit("update-location", { userId, location: { lat, lon } });
   };
 
   const updateUserLocationThrottled = useCallback(
-    _.throttle(updateUserLocation, 10000), // Throttle updates to every 10 seconds
+    _.throttle(updateUserLocation, 3000), // Throttle updates to every 3 seconds
     []
   );
 
@@ -83,7 +93,7 @@ const MapView = () => {
         updateUserLocationThrottled(lat, lon); // Throttle the updates to backend
       },
       handleGeolocationError,
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
     );
 
     return () => {
@@ -91,23 +101,44 @@ const MapView = () => {
     };
   }, [updateUserLocationThrottled]);
 
+  // Real-time updates of driver locations from the socket
+  useEffect(() => {
+    socket.on("location-update", (updatedDriver) => {
+      setDriverDetails((prevDriverDetails) =>
+        prevDriverDetails.map((driver) =>
+          driver._id === updatedDriver._id ? updatedDriver : driver
+        )
+      );
+    });
+
+    return () => {
+      socket.off("location-update");
+    };
+  }, []);
+
   // Log user and driver locations every second
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (userLocation) {
-        console.log(`User Location: [Lat: ${userLocation.lat.toFixed(4)}, Lon: ${userLocation.lon.toFixed(4)}]`);
+        console.log(
+          `User ID: ${userId}, User Location: [Lat: ${userLocation.lat.toFixed(7)}, Lon: ${userLocation.lon.toFixed(7)}]`
+        );
       }
 
       // Log all driver locations
-      driverDetails.forEach(driver => {
+      driverDetails.forEach((driver) => {
         if (driver.location?.lat && driver.location?.lon) {
-          console.log(`${driver.driverName}'s Location: [Lat: ${driver.location.lat.toFixed(4)}, Lon: ${driver.location.lon.toFixed(4)}]`);
+          console.log(
+            `Driver ID: ${driver._id}, Driver: ${driver.driverName}, Location: [Lat: ${driver.location.lat.toFixed(
+              7
+            )}, Lon: ${driver.location.lon.toFixed(7)}]`
+          );
         }
       });
-    }, 1000); // Log every second
+    }, 1000); // Log every second 
 
     return () => clearInterval(intervalId); // Cleanup on unmount
-  }, [userLocation, driverDetails]); // Depend on `userLocation` and `driverDetails`
+  }, [userLocation, driverDetails]);
 
   // Fetch driver data on component mount
   useEffect(() => {
@@ -117,7 +148,16 @@ const MapView = () => {
   return (
     <div className="p-0" style={{ height: "100vh", width: "100vw" }}>
       {error && (
-        <div style={{ position: "absolute", top: 20, left: 20, backgroundColor: "red", color: "white", padding: "10px" }}>
+        <div
+          style={{
+            position: "absolute",
+            top: 20,
+            left: 20,
+            backgroundColor: "red",
+            color: "white",
+            padding: "10px",
+          }}
+        >
           {error}
         </div>
       )}
@@ -137,7 +177,7 @@ const MapView = () => {
 
         {/* User's location marker */}
         {userLocation && (
-          <Marker position={[userLocation.lat, userLocation.lon]} icon={customIcon}>
+          <Marker position={[userLocation.lat, userLocation.lon]} icon={getCustomIcon(true)}>
             <Popup>
               <strong>Your Location</strong>
               <br />
@@ -151,16 +191,21 @@ const MapView = () => {
         {/* Drivers' locations */}
         {driverDetails.map((driver) => {
           if (driver.location?.lat && driver.location?.lon) {
+            const isActive = driver.isActive; // Determine if the driver is active
             return (
-              <Marker key={driver._id} position={[driver.location.lat, driver.location.lon]} icon={customIcon}>
+              <Marker
+                key={driver._id}
+                position={[driver.location.lat, driver.location.lon]}
+                icon={getCustomIcon(isActive)}
+              >
                 <Popup>
                   <strong>{driver.driverName}</strong>
                   <br />
                   Car: {driver.carModel}
                   <br />
-                  Latitude: {driver.location.lat.toFixed(4)}
+                  Latitude: {driver.location.lat.toFixed(7)}
                   <br />
-                  Longitude: {driver.location.lon.toFixed(4)}
+                  Longitude: {driver.location.lon.toFixed(7)}
                 </Popup>
               </Marker>
             );
@@ -173,3 +218,4 @@ const MapView = () => {
 };
 
 export default MapView;
+

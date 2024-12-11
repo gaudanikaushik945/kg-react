@@ -3,14 +3,18 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { AuthProvider } from './Components/context/contex';
+import { AuthProvider } from './Components/context/UserContext';
+import SocketProvider from './Components/context/socket-contex';
+
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
        <AuthProvider>
-      <App />
+       <SocketProvider>
+       <App />
+       </SocketProvider>
     </AuthProvider>
   </React.StrictMode>
 );

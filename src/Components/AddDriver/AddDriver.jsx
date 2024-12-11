@@ -1,6 +1,7 @@
-import React, { useContext, useState, useEffect } from "react";
-import { AuthContext } from "../context/contex";
+
+import React, { useContext, useState, useEffect } from "react"; 
 import socket from "../../socket"; 
+import { AuthContext } from "../context/UserContext";
 
 const AddDriver = ({ setDrivers }) => {
   const [formData, setFormData] = useState({
@@ -25,53 +26,58 @@ const AddDriver = ({ setDrivers }) => {
     }));
   };
 
+
   const handleAddDriver = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
+  
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
       setLoading(false);
       return;
     }
-
+  
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
+  
+        // Log location data before setting the state
+        console.log("Location fetched: ", { lat: latitude, lon: longitude });
+  
+        // Ensure location is being set correctly before making the API request
         setLocation({ lat: latitude, lon: longitude });
-
+  
         const driverData = {
           ...formData,
-          location: { lat: latitude, lon: longitude },
+          location: { lat: latitude, lon: longitude },  // Ensure location is included
         };
-
+  
+        console.log("Driver data being sent to backend: ", driverData); // Log the complete data
+  
         try {
-          const response = await fetch("http://localhost:8000/api/register/driver", {
+          const response = await fetch("http://localhost:8000/api/drivers/register/driver", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(driverData),
+            body: JSON.stringify(driverData),  // Make sure location is included in the body
           });
-
+  
           if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || "Failed to add driver.");
           }
-
+  
           const responseData = await response.json();
           setAddDriver(true);
           setDrivers((prevDrivers) => [...prevDrivers, responseData]);
-
-          // Emit location to the server via WebSocket
-          socket.emit("send-location", {
-            latitude,
-            longitude,
-            driverName: formData.driverName,
+  
+          socket.emit("update-location-captain", {
+            userId: responseData._id,
+            location: { lat: latitude, lon: longitude },
           });
-
-          // Reset the form
+  
           setFormData({
             driverName: "",
             mobileNumber: "",
@@ -80,8 +86,9 @@ const AddDriver = ({ setDrivers }) => {
             carModel: "",
             isActive: "active",
           });
-
+  
           alert("Driver added successfully!");
+  
         } catch (err) {
           console.error("Error:", err);
           setError(err.message || "Failed to add driver. Please try again.");
@@ -99,10 +106,10 @@ const AddDriver = ({ setDrivers }) => {
         timeout: 5000,
         maximumAge: 0,
       }
-    );
+    ); 
   };
+    
 
-  // Setup socket listener and cleanup on component unmount
   useEffect(() => {
     const handleLocationUpdate = (data) => {
       const { id, latitude, longitude } = data;
@@ -118,9 +125,7 @@ const AddDriver = ({ setDrivers }) => {
 
   return (
     <div className="mt-20 flex flex-col items-center justify-center">
-      <h3 className="text-2xl font-bold text-center text-gray-700 mb-6">
-        Add New Driver
-      </h3>
+      <h3 className="text-2xl font-bold text-center text-gray-700 mb-6">Add New Driver</h3>
 
       <div className="bg-white w-full max-w-lg p-8 rounded-lg shadow-lg">
         {error && <p className="text-red-500 text-center">{error}</p>}

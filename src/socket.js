@@ -15,7 +15,7 @@ socket.on("connect", () => {
 });
 
 socket.on("error", (error) => {
-  console.error("Error:", error);
+  console.error("Error:", error); 
 });
 
 export default socket;
